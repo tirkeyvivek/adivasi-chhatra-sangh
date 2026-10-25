@@ -1,3 +1,5 @@
+<p align="center"><img src="public/acs_logo.jpeg" alt="Adivasi Chhatra Sangh logo" width="160" /></p>
+
 # आदिवासी छात्र संघ, झारखण्ड
 
 **Adivasi Chhatra Sangh, Jharkhand** — Reg. No. 24/2015-16
