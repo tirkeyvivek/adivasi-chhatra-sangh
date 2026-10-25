@@ -1,7 +1,18 @@
 import { Link } from 'react-router'
 import { ArrowRight, ExternalLink } from 'lucide-react'
-import { campaigns, heroPhotos, news, org, pillars, stats, symbolism } from '../data/content'
+import {
+  campaigns,
+  galleryPhotos,
+  galleryPreview,
+  heroPhotos,
+  news,
+  org,
+  pillars,
+  stats,
+  symbolism,
+} from '../data/content'
 import { Button, Hills, SectionHeading } from '../components/ui'
+import PhotoGallery from '../components/PhotoGallery'
 import PhotoSlider from '../components/PhotoSlider'
 
 export default function Home() {
@@ -130,6 +141,21 @@ export default function Home() {
               <p className="mt-3 text-forest-800/80">{text}</p>
             </article>
           ))}
+        </div>
+      </section>
+
+      {/* Gallery */}
+      <section id="gallery" className="leaf-pattern bg-forest-900 py-14 text-white sm:py-20">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6">
+          <SectionHeading
+            light
+            eyebrow="Photo gallery"
+            title="संघर्ष की झलकियाँ"
+            subtitle="Rallies, sit-ins, signature campaigns and celebrations — moments from the Sangh's work across Jharkhand."
+          />
+          <div className="mt-10 sm:mt-12">
+            <PhotoGallery photos={galleryPhotos} preview={galleryPreview} />
+          </div>
         </div>
       </section>
 
