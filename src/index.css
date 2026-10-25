@@ -1,0 +1,74 @@
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: 'Mukta', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Yatra One', 'Mukta', serif;
+
+  --color-forest-50: #f0f9f1;
+  --color-forest-100: #dcf1de;
+  --color-forest-200: #bbe2c0;
+  --color-forest-300: #8ccb96;
+  --color-forest-400: #58ad67;
+  --color-forest-500: #369148;
+  --color-forest-600: #267538;
+  --color-forest-700: #1f5d2f;
+  --color-forest-800: #1c4a28;
+  --color-forest-900: #173d23;
+  --color-forest-950: #0b2213;
+
+  --color-sun-300: #fcd34d;
+  --color-sun-400: #fbbf24;
+  --color-sun-500: #f59e0b;
+
+  --color-earth-500: #b45309;
+  --color-earth-600: #92400e;
+  --color-clay: #f7f3e8;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-clay font-sans text-forest-950 antialiased;
+}
+
+/* Sohrai/Khovar inspired repeating motif used as a decorative band */
+.tribal-band {
+  height: 14px;
+  background-color: var(--color-forest-800);
+  background-image:
+    linear-gradient(135deg, var(--color-sun-400) 25%, transparent 25%),
+    linear-gradient(225deg, var(--color-sun-400) 25%, transparent 25%),
+    linear-gradient(315deg, var(--color-sun-400) 25%, transparent 25%),
+    linear-gradient(45deg, var(--color-sun-400) 25%, transparent 25%);
+  background-size: 14px 14px;
+  background-position: 0 0, 0 0, 7px 7px, 7px 7px;
+}
+
+/* Dotted overlay drawn on a pseudo-element so it never overrides bg-* utilities */
+.leaf-pattern {
+  position: relative;
+  isolation: isolate;
+}
+
+.leaf-pattern::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: radial-gradient(circle at 1px 1px, rgb(255 255 255 / 0.08) 1px, transparent 0);
+  background-size: 22px 22px;
+}
+
+html {
+  scroll-padding-top: 6rem;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Safety net against stray horizontal scroll on phones (clip keeps sticky header working) */
+body {
+  overflow-x: clip;
+}
