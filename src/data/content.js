@@ -25,10 +25,16 @@ export const org = {
 
 // Home hero slider. Each src has -640.webp and -1200.webp copies resized from public/photos/*.jpeg
 export const heroPhotos = [
+  {
+    src: '/photos/slides/2',
+    alt: 'Central committee members with the Sangh banner at a garlanded statue',
+    position: 'center 40%',
+  },
   { src: '/photos/slides/4', alt: 'Students performing a traditional dance in red-and-white attire' },
+  { src: '/photos/slides/19', alt: 'Students gathered in front of the Sangh banner at DSPMU, Ranchi' },
   { src: '/photos/slides/5', alt: 'Students in traditional dress marching in a procession' },
+  { src: '/photos/slides/38', alt: 'Students holding a sit-in protest at DSPMU, Ranchi' },
   { src: '/photos/slides/6', alt: 'A Sangh leader addressing a gathering' },
-  { src: '/photos/slides/2', alt: 'Students gathered with the Sangh banner', position: 'center 40%' },
   { src: '/photos/slides/3', alt: 'Students seated in a college hall' },
   { src: '/photos/slides/7', alt: 'Paying tribute at a statue', position: 'center 35%' },
   { src: '/photos/slides/1', alt: 'Sangh members welcoming a guest with a bouquet', position: 'center 25%' },
