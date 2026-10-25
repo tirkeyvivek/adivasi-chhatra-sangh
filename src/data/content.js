@@ -23,6 +23,18 @@ export const org = {
   email: 'adivasichhatrasanghjh@gmail.com',
 }
 
+// Web app URL of the Google Apps Script that saves Contact and Join forms to the Google Sheet
+export const formsEndpoint =
+  'https://script.google.com/macros/s/AKfycbycMDQYe-qxyDcTDJO_K4RwPZDCJV7vcAlh9ZFWRa8x47K6f9h-4EGTOBfAlDreo5tt/exec'
+
+// Social profiles. Entries with an empty url are hidden.
+export const socials = [
+  { name: 'Instagram', url: 'https://www.instagram.com/ranchi__life/' },
+  { name: 'Facebook', url: 'https://www.facebook.com/share/1DncCsHLVh/' },
+  { name: 'YouTube', url: 'https://www.youtube.com/@ranchilife0' },
+  { name: 'X', url: 'https://x.com/ranchi_life' },
+]
+
 // Home hero slider. Each src has -640.webp and -1200.webp copies resized from public/photos/*.jpeg
 export const heroPhotos = [
   {

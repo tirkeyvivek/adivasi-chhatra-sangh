@@ -8,12 +8,14 @@ import {
   news,
   org,
   pillars,
+  socials,
   stats,
   symbolism,
 } from '../data/content'
 import { Button, Hills, SectionHeading } from '../components/ui'
 import PhotoGallery from '../components/PhotoGallery'
 import PhotoSlider from '../components/PhotoSlider'
+import SocialLinks from '../components/SocialLinks'
 
 export default function Home() {
   return (
@@ -44,6 +46,12 @@ export default function Home() {
                 Know More
               </Button>
             </div>
+            {socials.some((s) => s.url) && (
+              <div className="mt-8 flex flex-wrap items-center gap-x-4 gap-y-3">
+                <p className="text-sm font-semibold tracking-wider text-forest-200 uppercase">Follow us</p>
+                <SocialLinks linkClassName="bg-white/10 text-white ring-1 ring-white/20 hover:bg-sun-400 hover:text-forest-950" />
+              </div>
+            )}
           </div>
 
           <div className="flex justify-center">

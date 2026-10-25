@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { CheckCircle2 } from 'lucide-react'
-import { districts } from '../data/content'
+import { districts, org } from '../data/content'
 import { Button, PageHeader } from '../components/ui'
+import { submitForm } from '../submitForm'
 
 const inputClass =
   'min-h-12 w-full rounded-xl border border-forest-200 bg-white px-4 py-3 text-base text-forest-950 outline-none transition focus:border-forest-500 focus:ring-4 focus:ring-forest-200'
@@ -24,11 +25,19 @@ const benefits = [
 
 export default function Join() {
   const [submitted, setSubmitted] = useState(null)
+  const [status, setStatus] = useState('idle') // idle | sending | error
 
-  // No backend yet: the form only confirms on screen
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault()
-    setSubmitted(Object.fromEntries(new FormData(e.currentTarget)))
+    const form = e.currentTarget
+    setStatus('sending')
+    try {
+      await submitForm('join', form)
+      setSubmitted(Object.fromEntries(new FormData(form)))
+      setStatus('idle')
+    } catch {
+      setStatus('error')
+    }
   }
 
   return (
@@ -94,7 +103,7 @@ export default function Join() {
                 <input name="email" type="email" className={inputClass} placeholder="you@example.com" />
               </Field>
               <Field label="District *">
-                <select name="district" required className={inputClass} defaultValue="">
+                <select name="district" required className={`${inputClass} h-12 py-0`} defaultValue="">
                   <option value="" disabled>Select district</option>
                   {districts.map((d) => (
                     <option key={d}>{d}</option>
@@ -102,7 +111,18 @@ export default function Join() {
                   <option>Outside Jharkhand</option>
                 </select>
               </Field>
-              <Field label="College / Institution *">
+              <div className="sm:col-span-2">
+                <Field label="Address">
+                  <textarea
+                    name="address"
+                    rows={2}
+                    autoComplete="street-address"
+                    className={inputClass}
+                    placeholder="Village / town, block, PIN code"
+                  />
+                </Field>
+              </div>
+              <Field label="College / Institution / Common *">
                 <input name="college" required className={inputClass} placeholder="Name of institution" />
               </Field>
               <Field label="Course / Class">
@@ -113,9 +133,20 @@ export default function Join() {
                   <textarea name="message" rows={4} className={inputClass} placeholder="Tell us a little about yourself" />
                 </Field>
               </div>
+              <input name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" className="hidden" />
+              {status === 'error' && (
+                <p role="alert" className="rounded-xl bg-red-50 p-4 text-red-800 ring-1 ring-red-200 sm:col-span-2">
+                  Sorry, your application could not be sent. Please try again, or call {org.phones[0]}.
+                </p>
+              )}
               <div className="sm:col-span-2">
-                <Button variant="green" type="submit" className="w-full sm:w-auto">
-                  Submit Application
+                <Button
+                  variant="green"
+                  type="submit"
+                  disabled={status === 'sending'}
+                  className="w-full disabled:opacity-60 sm:w-auto"
+                >
+                  {status === 'sending' ? 'Submitting…' : 'Submit Application'}
                 </Button>
               </div>
             </form>
