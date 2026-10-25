@@ -4,7 +4,7 @@
 
 **Adivasi Chhatra Sangh, Jharkhand** — Reg. No. 24/2015-16
 
-*"पढ़ेंगे और हक के लिए लड़ेंगे"* — We will study, and we will fight for our rights.
+*"पढ़ेंगे, लिखेंगे और हक के लिए लड़ेंगे"* — We will read, we will write, and we will fight for our rights.
 
 Adivasi Chhatra Sangh is a registered student organisation working for tribal students and Adivasi communities across Jharkhand.
 
