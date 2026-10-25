@@ -44,9 +44,13 @@ export default function Footer() {
             </li>
             <li className="flex gap-3">
               <Phone size={20} className="shrink-0 text-sun-400" />
-              <a href={`tel:${org.phone.replace(/\s/g, '')}`} className="hover:text-white">
-                {org.phone}
-              </a>
+              <div>
+                {org.phones.map((phone) => (
+                  <a key={phone} href={`tel:${phone.replace(/\s/g, '')}`} className="block hover:text-white">
+                    {phone}
+                  </a>
+                ))}
+              </div>
             </li>
             <li className="flex min-w-0 gap-3">
               <Mail size={20} className="shrink-0 text-sun-400" />

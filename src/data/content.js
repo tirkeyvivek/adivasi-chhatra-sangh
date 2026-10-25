@@ -18,10 +18,9 @@ export const org = {
   sloganEn: 'We will study — and we will fight for our rights',
   regNo: '24/2015-16',
   logo: '/acs_logo.jpeg',
-  // TODO: replace with the organisation's real contact details
-  address: 'Karamtoli Adivasi Hostel, Karamtoli, Ranchi, Jharkhand – 834001',
-  phone: '+91 00000 00000',
-  email: 'contact@adivasichhatrasangh.org',
+  address: 'Karamtoli, Ranchi, Jharkhand – 834001',
+  phones: ['+91 94315 20796', '+91 89692 66911'],
+  email: 'adivasichhatrasanghjh@gmail.com',
 }
 
 export const navLinks = [

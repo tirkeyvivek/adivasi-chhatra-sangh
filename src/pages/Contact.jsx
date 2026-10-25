@@ -11,8 +11,12 @@ export default function Contact() {
 
   const cards = [
     { icon: MapPin, title: 'Office', value: org.address },
-    { icon: Phone, title: 'Phone', value: org.phone, href: `tel:${org.phone.replace(/\s/g, '')}` },
-    { icon: Mail, title: 'Email', value: org.email, href: `mailto:${org.email}` },
+    {
+      icon: Phone,
+      title: 'Phone',
+      links: org.phones.map((phone) => ({ value: phone, href: `tel:${phone.replace(/\s/g, '')}` })),
+    },
+    { icon: Mail, title: 'Email', links: [{ value: org.email, href: `mailto:${org.email}` }] },
   ]
 
   return (
@@ -25,15 +29,23 @@ export default function Contact() {
 
       <section className="mx-auto grid max-w-7xl gap-8 px-4 py-12 sm:px-6 sm:py-16 lg:grid-cols-[1fr_1.4fr]">
         <div className="space-y-4 sm:space-y-5">
-          {cards.map(({ icon: Icon, title, value, href }) => (
+          {cards.map(({ icon: Icon, title, value, links }) => (
             <div key={title} className="flex gap-4 rounded-2xl bg-white p-5 ring-1 sm:p-6 ring-forest-100">
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-forest-700 text-white">
                 <Icon size={22} />
               </div>
               <div className="min-w-0">
                 <p className="font-bold text-forest-900">{title}</p>
-                {href ? (
-                  <a href={href} className="text-forest-700 [overflow-wrap:anywhere] hover:underline">{value}</a>
+                {links ? (
+                  links.map((link) => (
+                    <a
+                      key={link.href}
+                      href={link.href}
+                      className="block text-forest-700 [overflow-wrap:anywhere] hover:underline"
+                    >
+                      {link.value}
+                    </a>
+                  ))
                 ) : (
                   <p className="text-forest-900/80">{value}</p>
                 )}
@@ -42,8 +54,8 @@ export default function Contact() {
           ))}
           <div className="overflow-hidden rounded-2xl ring-1 ring-forest-100">
             <iframe
-              title="Ranchi map"
-              src="https://www.google.com/maps?q=Karamtoli,Ranchi,Jharkhand&output=embed"
+              title="Office map"
+              src={`https://www.google.com/maps?q=${encodeURIComponent(org.address)}&output=embed`}
               className="h-56 w-full sm:h-64"
               loading="lazy"
               referrerPolicy="no-referrer-when-downgrade"
