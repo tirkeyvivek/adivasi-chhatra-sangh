@@ -1,39 +1,16 @@
-# Adivasi Chhatra Sangh, Jharkhand — Website
+# आदिवासी छात्र संघ, झारखण्ड
 
-Official website for **आदिवासी छात्र संघ, झारखण्ड** (Reg. No. 24/2015-16) — *"पढ़ेंगे और हक के लिए लड़ेंगे"*.
+**Adivasi Chhatra Sangh, Jharkhand** — Reg. No. 24/2015-16
 
-Built with React 19, Vite, Tailwind CSS v4 and React Router.
+*"पढ़ेंगे और हक के लिए लड़ेंगे"* — We will study, and we will fight for our rights.
 
-## Run locally
+Adivasi Chhatra Sangh is a registered student organisation working for tribal students and Adivasi communities across Jharkhand.
 
-```bash
-npm install
-npm run dev      # http://localhost:5173
-npm run build    # production build in dist/
-npm run preview  # serve the production build
-```
+## What we stand for
 
-## Editing content
+- **Education (शिक्षा)** — affordable fees, scholarships, hostels and quality teaching for every tribal student.
+- **Rights (अधिकार)** — defending the Fifth Schedule, PESA, CNT/SPT Acts and reservation.
+- **Identity (पहचान)** — preserving Sarna faith, tribal languages, and festivals like Sarhul, Karma and Sohrai.
+- **Unity (एकता)** — building democratic student units in colleges, hostels and districts.
 
-All text (contact details, campaigns, news, leadership, districts) lives in
-`src/data/content.js`. Items marked `TODO` need real details:
-
-- `org.address`, `org.phone`, `org.email`
-- `leaders[]` — add a `name` field to each office bearer
-
-## Structure
-
-```
-public/acs_logo.jpeg      logo (also used as favicon)
-src/components/           Navbar, Footer, shared UI (Button, PageHeader, Logo, Hills)
-src/pages/                Home, About, Campaigns, News, Join, Contact, NotFound
-src/index.css             Tailwind theme (forest green / sun yellow palette)
-```
-
-## Deploying
-
-The site is a single-page app. When hosting on Netlify/Vercel/etc., add a rewrite of all
-routes to `/index.html` so links like `/about` work on refresh.
-
-The Join and Contact forms currently confirm on screen only — connect them to a backend,
-Google Form, or a service such as Formspree to actually receive submissions.
+This is the organisation's official website.
