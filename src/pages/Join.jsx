@@ -60,7 +60,7 @@ export default function Join() {
             ))}
           </ul>
           <div className="mt-6 rounded-2xl bg-forest-800 p-5 sm:mt-8 sm:p-6 text-forest-50">
-            <p className="font-display text-xl text-sun-300">“पढ़ेंगे और हक के लिए लड़ेंगे”</p>
+            <p className="font-display text-xl text-sun-300">“{org.sloganHi}”</p>
             <p className="mt-2">Membership is open to tribal students studying in schools, colleges and universities.</p>
           </div>
         </div>
