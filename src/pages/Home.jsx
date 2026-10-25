@@ -1,7 +1,8 @@
 import { Link } from 'react-router'
 import { ArrowRight, ExternalLink } from 'lucide-react'
-import { campaigns, news, org, pillars, stats, symbolism } from '../data/content'
-import { Button, Hills, Logo, SectionHeading } from '../components/ui'
+import { campaigns, heroPhotos, news, org, pillars, stats, symbolism } from '../data/content'
+import { Button, Hills, SectionHeading } from '../components/ui'
+import PhotoSlider from '../components/PhotoSlider'
 
 export default function Home() {
   return (
@@ -35,14 +36,7 @@ export default function Home() {
           </div>
 
           <div className="flex justify-center">
-            <div className="relative">
-              <div className="absolute inset-0 -m-4 rounded-full border-2 border-dashed border-sun-300/50 sm:-m-6" />
-              <div className="absolute inset-0 -m-8 rounded-full border border-white/10 sm:-m-12" />
-              <Logo
-                alt="Adivasi Chhatra Sangh Jharkhand logo"
-                className="relative h-52 w-52 shadow-2xl ring-8 ring-white/15 sm:h-72 sm:w-72 lg:h-80 lg:w-80"
-              />
-            </div>
+            <PhotoSlider photos={heroPhotos} label="Photos from the Sangh's programmes" />
           </div>
         </div>
         <Hills className="absolute inset-x-0 bottom-0 text-clay" />
