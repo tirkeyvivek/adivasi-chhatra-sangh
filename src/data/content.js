@@ -18,11 +18,83 @@ export const org = {
   sloganEn: 'We will study — and we will fight for our rights',
   regNo: '24/2015-16',
   logo: '/acs_logo.jpeg',
-  // TODO: replace with the organisation's real contact details
-  address: 'Karamtoli Adivasi Hostel, Karamtoli, Ranchi, Jharkhand – 834001',
-  phone: '+91 00000 00000',
-  email: 'contact@adivasichhatrasangh.org',
+  address: 'Karamtoli, Ranchi, Jharkhand – 834001',
+  // Shown as "number (name)". Leave name empty to show the number alone.
+  phones: [
+    { number: '+91 94315 20796', name: 'Sushil Oraon' },
+    { number: '+91 77658 60679', name: 'Sumit Oraon' },
+    { number: '+91 62029 89235', name: 'Manoj Oraon' },
+    { number: '+91 89692 66911', name: 'Vivek Tirkey' },
+  ],
+  email: 'adivasichhatrasanghjh@gmail.com',
 }
+
+// Web app URL of the Google Apps Script that saves Contact and Join forms to the Google Sheet
+export const formsEndpoint =
+  'https://script.google.com/macros/s/AKfycbycMDQYe-qxyDcTDJO_K4RwPZDCJV7vcAlh9ZFWRa8x47K6f9h-4EGTOBfAlDreo5tt/exec'
+
+// Social profiles. Entries with an empty url are hidden.
+export const socials = [
+  { name: 'Instagram', url: 'https://www.instagram.com/ranchi__life/' },
+  { name: 'Facebook', url: 'https://www.facebook.com/share/1DncCsHLVh/' },
+  { name: 'YouTube', url: 'https://www.youtube.com/@ranchilife0' },
+  { name: 'X', url: 'https://x.com/ranchi_life' },
+]
+
+// Home hero slider. Each src has -640.webp and -1200.webp copies resized from public/photos/*.jpeg
+export const heroPhotos = [
+  {
+    src: '/photos/slides/2',
+    alt: 'Central committee members with the Sangh banner at a garlanded statue',
+    position: 'center 40%',
+  },
+  { src: '/photos/slides/4', alt: 'Students performing a traditional dance in red-and-white attire' },
+  { src: '/photos/slides/19', alt: 'Students gathered in front of the Sangh banner at DSPMU, Ranchi' },
+  { src: '/photos/slides/5', alt: 'Students in traditional dress marching in a procession' },
+  { src: '/photos/slides/38', alt: 'Students holding a sit-in protest at DSPMU, Ranchi' },
+  { src: '/photos/slides/6', alt: 'A Sangh leader addressing a gathering' },
+  { src: '/photos/slides/3', alt: 'Students seated in a college hall' },
+  { src: '/photos/slides/7', alt: 'Paying tribute at a statue', position: 'center 35%' },
+  { src: '/photos/slides/1', alt: 'Sangh members welcoming a guest with a bouquet', position: 'center 25%' },
+]
+
+// Home gallery. Each src has -sm.webp (640 wide) and -lg.webp (w × h) copies made from public/photos/pics/*.jpeg.
+// span: 'feature' = 2×2 tile, 'tall' = 1×2 tile. The first `galleryPreview` tiles fill exactly 4 rows on desktop.
+export const galleryPreview = 11
+export const galleryPhotos = [
+  { src: '/photos/gallery/10', w: 1280, h: 960, span: 'feature', alt: 'Thousands gather at a rally ground in traditional red-and-white attire' },
+  { src: '/photos/gallery/34', w: 960, h: 1280, span: 'tall', alt: 'Dancers in feathered headgear perform a traditional dance' },
+  { src: '/photos/gallery/22', w: 1280, h: 960, alt: 'Students march with green flags demanding the e-Kalyan scholarship' },
+  { src: '/photos/gallery/18', w: 1280, h: 960, alt: 'Lohardaga district committee members with the Sangh banner' },
+  { src: '/photos/gallery/33', w: 1280, h: 960, alt: 'A packed stadium waving red-and-white flags' },
+  { src: '/photos/gallery/29', w: 960, h: 1280, span: 'tall', alt: 'A long procession of women in traditional sarees through a town street' },
+  { src: '/photos/gallery/36', w: 1280, h: 960, alt: 'Students sign the e-Kalyan scholarship petition banner at Ranchi College (DSPMU)' },
+  { src: '/photos/gallery/14', w: 1280, h: 960, alt: 'Rally participants carrying traditional bows and flags' },
+  { src: '/photos/gallery/38', w: 1280, h: 720, alt: 'Students stage a sit-in protest outside DSPMU' },
+  { src: '/photos/gallery/39', w: 1280, h: 960, alt: 'Dharna march with the Sangh banner demanding scholarship payments' },
+  { src: '/photos/gallery/30', w: 1280, h: 575, alt: 'East Singhbhum district committee members raise slogans' },
+  { src: '/photos/gallery/31', w: 1280, h: 721, span: 'feature', alt: 'A vast seated gathering at a mass rally' },
+  { src: '/photos/gallery/19', w: 1280, h: 960, alt: 'Students crowd around the signature campaign banner at Ranchi College' },
+  { src: '/photos/gallery/13', w: 720, h: 1280, span: 'tall', alt: 'A young Sangh leader speaks from the stage' },
+  { src: '/photos/gallery/17', w: 1280, h: 960, span: 'feature', alt: 'A large assembly of students with the Sangh banner on a college lawn' },
+  { src: '/photos/gallery/32', w: 1179, h: 667, alt: 'Central committee members gathered on a rocky hillside with green flags' },
+  { src: '/photos/gallery/37', w: 1280, h: 960, alt: 'Protest at a town square against encroachment' },
+  { src: '/photos/gallery/20', w: 960, h: 1280, span: 'tall', alt: 'A student signs the scholarship petition banner' },
+  { src: '/photos/gallery/35', w: 1280, h: 960, alt: 'Women hold placards at a rally ground' },
+  { src: '/photos/gallery/11', w: 1280, h: 723, alt: 'A Sangh leader addresses protesters with a microphone' },
+  { src: '/photos/gallery/12', w: 1280, h: 720, alt: 'A speaker addresses the crowd at a rally' },
+  { src: '/photos/gallery/28', w: 1024, h: 1280, span: 'tall', alt: 'Students hoist the flag outside a college building' },
+  { src: '/photos/gallery/26', w: 1280, h: 960, alt: 'A student delegation presents a bouquet to the Divisional Commissioner, Ranchi' },
+  { src: '/photos/gallery/23', w: 1280, h: 1137, alt: 'Sangh representatives meet an official in his office' },
+  { src: '/photos/gallery/24', w: 1280, h: 960, alt: 'Students at a felicitation programme in an auditorium' },
+  { src: '/photos/gallery/21', w: 960, h: 1280, span: 'tall', alt: 'Paying floral tribute at a memorial' },
+  { src: '/photos/gallery/15', w: 1280, h: 960, alt: 'Guests plant a sapling at a Sangh programme' },
+  { src: '/photos/gallery/8', w: 720, h: 1280, span: 'tall', alt: 'Students walk with a tribute banner for Dishom Guru Shibu Soren' },
+  { src: '/photos/gallery/27', w: 1280, h: 720, alt: 'Tribute march for Dishom Guru Shibu Soren' },
+  { src: '/photos/gallery/25', w: 1280, h: 960, alt: 'Students gathered outside a college campus' },
+  { src: '/photos/gallery/9', w: 1280, h: 720, alt: 'Sangh members pose together under palm trees' },
+  { src: '/photos/gallery/16', w: 1280, h: 960, alt: 'Sangh leaders together on a highway at night' },
+]
 
 export const navLinks = [
   { to: '/', label: 'Home', labelHi: 'मुख्य पृष्ठ' },
@@ -175,12 +247,16 @@ export const news = [
   },
 ]
 
-// TODO: replace with the current office bearers
 export const leaders = [
-  { role: 'Central President', roleHi: 'केंद्रीय अध्यक्ष' },
-  { role: 'Central Working President', roleHi: 'केंद्रीय कार्यकारी अध्यक्ष' },
-  { role: 'Central Convener', roleHi: 'केंद्रीय संयोजक' },
-  { role: 'General Secretary', roleHi: 'महासचिव' },
+  {
+    name: 'Sushil Oraon',
+    role: 'Central President',
+    roleHi: 'केंद्रीय अध्यक्ष',
+    photo: '/photos/leadership/sushil_oraon.webp',
+  },
+  { name: 'Manoj Oraon', role: 'Central Working President', roleHi: 'केंद्रीय कार्यकारी अध्यक्ष' },
+  { name: 'Jaleshwar Bhagat', role: 'Treasurer', roleHi: 'कोषाध्यक्ष' },
+  { name: 'Pradeep Munda', role: 'Secretary', roleHi: 'सचिव' },
 ]
 
 export const districts = [

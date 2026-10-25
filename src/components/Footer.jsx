@@ -2,6 +2,7 @@ import { Link } from 'react-router'
 import { Mail, MapPin, Phone } from 'lucide-react'
 import { navLinks, org } from '../data/content'
 import { Logo } from './ui'
+import SocialLinks from './SocialLinks'
 
 export default function Footer() {
   return (
@@ -20,6 +21,10 @@ export default function Footer() {
           </div>
           <p className="mt-5 font-display text-lg text-sun-300">“{org.sloganHi}”</p>
           <p className="mt-1 text-sm text-forest-300">Registration No. {org.regNo}</p>
+          <SocialLinks
+            className="mt-5"
+            linkClassName="bg-white/10 text-forest-100 ring-1 ring-white/15 hover:bg-sun-400 hover:text-forest-950"
+          />
         </div>
 
         <div>
@@ -44,9 +49,14 @@ export default function Footer() {
             </li>
             <li className="flex gap-3">
               <Phone size={20} className="shrink-0 text-sun-400" />
-              <a href={`tel:${org.phone.replace(/\s/g, '')}`} className="hover:text-white">
-                {org.phone}
-              </a>
+              <div>
+                {org.phones.map(({ number, name }) => (
+                  <a key={number} href={`tel:${number.replace(/\s/g, '')}`} className="block hover:text-white">
+                    {number}
+                    {name && ` (${name})`}
+                  </a>
+                ))}
+              </div>
             </li>
             <li className="flex min-w-0 gap-3">
               <Mail size={20} className="shrink-0 text-sun-400" />

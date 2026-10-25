@@ -1,5 +1,5 @@
-import { useEffect } from 'react'
-import { Route, Routes, useLocation } from 'react-router'
+import { lazy, Suspense, useEffect } from 'react'
+import { Outlet, Route, Routes, useLocation } from 'react-router'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import Home from './pages/Home'
@@ -10,6 +10,9 @@ import Join from './pages/Join'
 import Contact from './pages/Contact'
 import NotFound from './pages/NotFound'
 
+// Admin is loaded on demand so it adds nothing to the public pages' bundle
+const Admin = lazy(() => import('./pages/Admin'))
+
 function ScrollToTop() {
   const { pathname } = useLocation()
   useEffect(() => {
@@ -18,13 +21,32 @@ function ScrollToTop() {
   return null
 }
 
-export default function App() {
+function PublicLayout() {
   return (
     <div className="flex min-h-screen flex-col">
-      <ScrollToTop />
       <Navbar />
       <main className="flex-1">
-        <Routes>
+        <Outlet />
+      </main>
+      <Footer />
+    </div>
+  )
+}
+
+export default function App() {
+  return (
+    <>
+      <ScrollToTop />
+      <Routes>
+        <Route
+          path="/admin"
+          element={
+            <Suspense fallback={<p className="p-10 text-center text-forest-800">Loading…</p>}>
+              <Admin />
+            </Suspense>
+          }
+        />
+        <Route element={<PublicLayout />}>
           <Route path="/" element={<Home />} />
           <Route path="/about" element={<About />} />
           <Route path="/campaigns" element={<Campaigns />} />
@@ -32,9 +54,8 @@ export default function App() {
           <Route path="/join" element={<Join />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="*" element={<NotFound />} />
-        </Routes>
-      </main>
-      <Footer />
-    </div>
+        </Route>
+      </Routes>
+    </>
   )
 }

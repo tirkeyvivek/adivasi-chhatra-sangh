@@ -1,7 +1,21 @@
 import { Link } from 'react-router'
 import { ArrowRight, ExternalLink } from 'lucide-react'
-import { campaigns, news, org, pillars, stats, symbolism } from '../data/content'
-import { Button, Hills, Logo, SectionHeading } from '../components/ui'
+import {
+  campaigns,
+  galleryPhotos,
+  galleryPreview,
+  heroPhotos,
+  news,
+  org,
+  pillars,
+  socials,
+  stats,
+  symbolism,
+} from '../data/content'
+import { Button, Hills, SectionHeading } from '../components/ui'
+import PhotoGallery from '../components/PhotoGallery'
+import PhotoSlider from '../components/PhotoSlider'
+import SocialLinks from '../components/SocialLinks'
 
 export default function Home() {
   return (
@@ -32,17 +46,16 @@ export default function Home() {
                 Know More
               </Button>
             </div>
+            {socials.some((s) => s.url) && (
+              <div className="mt-8 flex flex-wrap items-center gap-x-4 gap-y-3">
+                <p className="text-sm font-semibold tracking-wider text-forest-200 uppercase">Follow us</p>
+                <SocialLinks linkClassName="bg-white/10 text-white ring-1 ring-white/20 hover:bg-sun-400 hover:text-forest-950" />
+              </div>
+            )}
           </div>
 
           <div className="flex justify-center">
-            <div className="relative">
-              <div className="absolute inset-0 -m-4 rounded-full border-2 border-dashed border-sun-300/50 sm:-m-6" />
-              <div className="absolute inset-0 -m-8 rounded-full border border-white/10 sm:-m-12" />
-              <Logo
-                alt="Adivasi Chhatra Sangh Jharkhand logo"
-                className="relative h-52 w-52 shadow-2xl ring-8 ring-white/15 sm:h-72 sm:w-72 lg:h-80 lg:w-80"
-              />
-            </div>
+            <PhotoSlider photos={heroPhotos} label="Photos from the Sangh's programmes" />
           </div>
         </div>
         <Hills className="absolute inset-x-0 bottom-0 text-clay" />
@@ -136,6 +149,21 @@ export default function Home() {
               <p className="mt-3 text-forest-800/80">{text}</p>
             </article>
           ))}
+        </div>
+      </section>
+
+      {/* Gallery */}
+      <section id="gallery" className="leaf-pattern bg-forest-900 py-14 text-white sm:py-20">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6">
+          <SectionHeading
+            light
+            eyebrow="Photo gallery"
+            title="संघर्ष की झलकियाँ"
+            subtitle="Rallies, sit-ins, signature campaigns and celebrations — moments from the Sangh's work across Jharkhand."
+          />
+          <div className="mt-10 sm:mt-12">
+            <PhotoGallery photos={galleryPhotos} preview={galleryPreview} />
+          </div>
         </div>
       </section>
 

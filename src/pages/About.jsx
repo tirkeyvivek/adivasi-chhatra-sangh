@@ -82,8 +82,12 @@ export default function About() {
           <div className="mt-8 grid grid-cols-2 gap-3 sm:mt-10 sm:gap-5 lg:grid-cols-4">
             {leaders.map((l) => (
               <div key={l.role} className="rounded-2xl bg-white/5 p-4 text-center ring-1 sm:p-6 ring-white/10">
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-forest-600 ring-4 sm:h-20 sm:w-20 ring-sun-400/60">
-                  <UserRound className="size-7 sm:size-10" />
+                <div className="mx-auto flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-forest-600 ring-4 sm:h-28 sm:w-28 ring-sun-400/60">
+                  {l.photo ? (
+                    <img src={l.photo} alt={l.name} className="h-full w-full object-cover" />
+                  ) : (
+                    <UserRound className="size-9 sm:size-12" />
+                  )}
                 </div>
                 <p className="mt-3 text-sm font-bold sm:mt-4 sm:text-lg">{l.name ?? 'Name to be updated'}</p>
                 <p className="text-sm text-sun-300 sm:text-base">{l.role}</p>
