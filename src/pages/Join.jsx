@@ -136,7 +136,7 @@ export default function Join() {
               <input name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" className="hidden" />
               {status === 'error' && (
                 <p role="alert" className="rounded-xl bg-red-50 p-4 text-red-800 ring-1 ring-red-200 sm:col-span-2">
-                  Sorry, your application could not be sent. Please try again, or call {org.phones[0]}.
+                  Sorry, your application could not be sent. Please try again, or call {org.phones[0].number}.
                 </p>
               )}
               <div className="sm:col-span-2">

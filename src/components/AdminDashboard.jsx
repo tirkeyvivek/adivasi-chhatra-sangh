@@ -1,6 +1,17 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router'
-import { Download, Inbox, LoaderCircle, LogOut, Mail, Phone, RefreshCw, Search, TriangleAlert } from 'lucide-react'
+import {
+  Download,
+  Image as ImageIcon,
+  Inbox,
+  LoaderCircle,
+  LogOut,
+  Mail,
+  Phone,
+  RefreshCw,
+  Search,
+  TriangleAlert,
+} from 'lucide-react'
 import { org } from '../data/content'
 import { Logo } from './ui'
 import { listSubmissions, updateStatus } from '../adminApi'
@@ -441,9 +452,26 @@ function EntryCard({ form, row, saving, error, onStatusChange }) {
 
       <dl className="mt-4 grid gap-3 sm:grid-cols-2">
         {details.map(({ field, label, value }) => (
-          <div key={field} className={field === 'message' ? 'sm:col-span-2' : ''}>
+          <div key={field} className={field === 'message' || field === 'photos' ? 'sm:col-span-2' : ''}>
             <dt className="text-xs font-bold tracking-wide text-earth-500 uppercase">{label}</dt>
-            <dd className="mt-0.5 whitespace-pre-wrap text-forest-950 [overflow-wrap:anywhere]">{value || '—'}</dd>
+            {field === 'photos' && value ? (
+              // Drive links; they open for accounts that can see the Sangh's Drive folder
+              <dd className="mt-1 flex flex-wrap gap-2">
+                {value.split('\n').filter((url) => url.startsWith('https://drive.google.com/')).map((url, i) => (
+                  <a
+                    key={url}
+                    href={url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1.5 rounded-full bg-forest-100 px-3 py-1.5 text-sm font-semibold text-forest-800 hover:bg-forest-200"
+                  >
+                    <ImageIcon size={15} /> Photo {i + 1}
+                  </a>
+                ))}
+              </dd>
+            ) : (
+              <dd className="mt-0.5 whitespace-pre-wrap text-forest-950 [overflow-wrap:anywhere]">{value || '—'}</dd>
+            )}
           </div>
         ))}
       </dl>

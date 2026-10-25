@@ -50,9 +50,10 @@ export default function Footer() {
             <li className="flex gap-3">
               <Phone size={20} className="shrink-0 text-sun-400" />
               <div>
-                {org.phones.map((phone) => (
-                  <a key={phone} href={`tel:${phone.replace(/\s/g, '')}`} className="block hover:text-white">
-                    {phone}
+                {org.phones.map(({ number, name }) => (
+                  <a key={number} href={`tel:${number.replace(/\s/g, '')}`} className="block hover:text-white">
+                    {number}
+                    {name && ` (${name})`}
                   </a>
                 ))}
               </div>

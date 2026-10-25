@@ -19,7 +19,13 @@ export const org = {
   regNo: '24/2015-16',
   logo: '/acs_logo.jpeg',
   address: 'Karamtoli, Ranchi, Jharkhand – 834001',
-  phones: ['+91 94315 20796', '+91 89692 66911'],
+  // Shown as "number (name)". Leave name empty to show the number alone.
+  phones: [
+    { number: '+91 94315 20796', name: 'Sushil Oraon' },
+    { number: '+91 77658 60679', name: 'Sumit Oraon' },
+    { number: '+91 62029 89235', name: 'Manoj Oraon' },
+    { number: '+91 89692 66911', name: 'Vivek Tirkey' },
+  ],
   email: 'adivasichhatrasanghjh@gmail.com',
 }
 

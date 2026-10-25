@@ -6,9 +6,10 @@
 const FORMS = {
   contact: {
     tab: 'Contact',
-    fields: ['name', 'phone', 'email', 'subject', 'message'],
-    headers: ['Name', 'Mobile', 'Email', 'Subject', 'Message'],
+    fields: ['name', 'phone', 'email', 'subject', 'message', 'photos'],
+    headers: ['Name', 'Mobile', 'Email', 'Subject', 'Message', 'Photos'],
     statuses: ['New', 'In progress', 'Resolved'],
+    acceptsPhotos: true,
   },
   join: {
     tab: 'Membership',
@@ -27,6 +28,11 @@ const MAX_FAILED_LOGINS = 5
 const LOCKOUT_SECONDS = 15 * 60
 const ADMIN_ACTIONS = ['login', 'list', 'update']
 
+// Photos attached to Contact messages (sent as photo1..photo3, base64 JPEG) go to a private Drive folder
+const UPLOAD_FOLDER_NAME = 'ACS Website Uploads'
+const MAX_PHOTOS = 3
+const MAX_PHOTO_BYTES = 3 * 1024 * 1024
+
 function doPost(e) {
   const params = e.parameter
   if (ADMIN_ACTIONS.indexOf(params.action) >= 0) return reply(handleAdmin(params))
@@ -37,7 +43,9 @@ function doPost(e) {
   // Hidden "website" field is invisible to people; bots that fill it are dropped silently
   if (params.website) return reply({ ok: true })
 
-  const values = form.fields.map((field) => clean(params[field]))
+  // Photo links are always produced here, never taken from the request
+  const input = Object.assign({}, params, { photos: form.acceptsPhotos ? savePhotos(params) : '' })
+  const values = form.fields.map((field) => clean(input[field]))
   const lock = LockService.getScriptLock()
   lock.waitLock(10000)
   try {
@@ -200,6 +208,54 @@ function setAdminPassword() {
   })
   CacheService.getScriptCache().remove('failed_logins')
   ui.alert('Admin password saved. Use it to log in at /admin on the website.')
+}
+
+// ---------- Photo uploads ----------
+
+// Saves photo1..photoN as JPEG files and returns their Drive links, one per line.
+// Files stay private to the Drive owner; anything that isn't a JPEG or is too large is skipped.
+function savePhotos(params) {
+  const links = []
+  const stamp = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH.mm.ss')
+  const who = String(params.name || 'unknown').replace(/[\\/:*?"<>|\r\n]/g, '').trim().slice(0, 40)
+  for (let i = 1; i <= MAX_PHOTOS; i++) {
+    const data = params[`photo${i}`]
+    if (!data) continue
+    let bytes
+    try {
+      bytes = Utilities.base64Decode(data)
+    } catch (err) {
+      continue
+    }
+    // Apps Script bytes are signed, so mask before checking the JPEG start marker FF D8
+    const isJpeg = bytes.length > 2 && (bytes[0] & 0xff) === 0xff && (bytes[1] & 0xff) === 0xd8
+    if (!isJpeg || bytes.length > MAX_PHOTO_BYTES) continue
+    const file = uploadFolder().createFile(Utilities.newBlob(bytes, 'image/jpeg', `${stamp} ${who} ${i}.jpg`))
+    links.push(file.getUrl())
+  }
+  return links.join('\n')
+}
+
+// The upload folder is created on first use and remembered by id, so renaming or moving it is fine
+function uploadFolder() {
+  const props = PropertiesService.getScriptProperties()
+  const id = props.getProperty('UPLOAD_FOLDER_ID')
+  if (id) {
+    try {
+      const folder = DriveApp.getFolderById(id)
+      if (!folder.isTrashed()) return folder
+    } catch (err) {
+      // Folder was deleted; make a new one below
+    }
+  }
+  const folder = DriveApp.createFolder(UPLOAD_FOLDER_NAME)
+  props.setProperty('UPLOAD_FOLDER_ID', folder.getId())
+  return folder
+}
+
+// Run once from the Apps Script editor after pasting this code: grants the Drive permission and creates the folder
+function authorize() {
+  console.log(`Photo uploads go to: ${uploadFolder().getUrl()}`)
 }
 
 // ---------- Helpers ----------
