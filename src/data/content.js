@@ -29,9 +29,15 @@ export const org = {
   email: 'adivasichhatrasanghjh@gmail.com',
 }
 
-// Web app URL of the Google Apps Script that saves Contact and Join forms to the Google Sheet
+// Web app URL of the Google Apps Script that saves Contact and Join forms to the Google Sheet.
+// VITE_FORMS_ENDPOINT in .env.local points a local copy at a test script instead.
 export const formsEndpoint =
+  import.meta.env.VITE_FORMS_ENDPOINT ||
   'https://script.google.com/macros/s/AKfycbycMDQYe-qxyDcTDJO_K4RwPZDCJV7vcAlh9ZFWRa8x47K6f9h-4EGTOBfAlDreo5tt/exec'
+
+// Membership fee in rupees, shown on the Join page. The amount actually charged is MEMBERSHIP_FEE in
+// google-apps-script/Code.gs, which only collects it once the Cashfree keys are set there.
+export const membershipFee = 21
 
 // Social profiles. Entries with an empty url are hidden.
 export const socials = [

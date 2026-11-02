@@ -18,9 +18,9 @@ import { listSubmissions, updateStatus } from '../adminApi'
 
 const ISSUE_SUBJECT = 'Report an issue at college / hostel'
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000
-const SEARCH_FIELDS = ['name', 'phone', 'email', 'message', 'college', 'address']
+const SEARCH_FIELDS = ['name', 'phone', 'email', 'message', 'college', 'address', 'orderId']
 // Shown in the card header rather than in the field list
-const HEADER_FIELDS = ['name', 'phone', 'email']
+const HEADER_FIELDS = ['name', 'phone', 'email', 'payment']
 
 const tabs = [
   { key: 'contact', label: 'Contact', filterField: 'subject', filterLabel: 'All subjects', empty: 'No messages yet.' },
@@ -41,6 +41,14 @@ const statusStyles = {
   Approved: 'bg-forest-50 text-forest-700 ring-forest-200',
   Rejected: 'bg-red-50 text-red-700 ring-red-200',
 }
+
+// Membership fee state written by the Apps Script; empty for applications from before the fee
+const paymentStyles = {
+  Paid: 'bg-forest-50 text-forest-700 ring-forest-200',
+  Pending: 'bg-sun-300/40 text-earth-600 ring-sun-400/70',
+  Expired: 'bg-gray-100 text-gray-600 ring-gray-200',
+}
+const paymentLabels = { Paid: 'Fee paid', Pending: 'Fee pending', Expired: 'Fee not paid' }
 
 const errorText = {
   network: 'Could not reach the server. Check your internet connection and try again.',
@@ -387,7 +395,7 @@ function Tile({ label, value, alert = false }) {
 }
 
 function EntryCard({ form, row, saving, error, onStatusChange }) {
-  const { name, phone, email, subject } = row.values
+  const { name, phone, email, subject, payment } = row.values
   const isIssue = subject === ISSUE_SUBJECT
   const details = form.fields
     .map((field, i) => ({ field, label: form.headers[i], value: row.values[field] }))
@@ -406,6 +414,15 @@ function EntryCard({ form, row, saving, error, onStatusChange }) {
           {isIssue && (
             <span className="mt-1 inline-flex items-center gap-1.5 rounded-full bg-red-100 px-2.5 py-1 text-xs font-bold text-red-800">
               <TriangleAlert size={14} /> Report an issue
+            </span>
+          )}
+          {payment && (
+            <span
+              className={`mt-1 inline-flex rounded-full px-2.5 py-1 text-xs font-bold ring-1 ${
+                paymentStyles[payment] || 'bg-white text-forest-900 ring-forest-200'
+              }`}
+            >
+              {paymentLabels[payment] || payment}
             </span>
           )}
         </div>

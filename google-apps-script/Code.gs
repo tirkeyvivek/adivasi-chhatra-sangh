@@ -13,14 +13,62 @@ const FORMS = {
   },
   join: {
     tab: 'Membership',
-    fields: ['name', 'phone', 'email', 'district', 'address', 'college', 'course', 'message'],
-    headers: ['Name', 'Mobile', 'Email', 'District', 'Address', 'College / Institution / Common', 'Course / Class', 'Why join'],
+    fields: [
+      'name',
+      'phone',
+      'email',
+      'district',
+      'address',
+      'college',
+      'course',
+      'message',
+      'payment',
+      'orderId',
+      'receiptNo',
+      'paymentRef',
+    ],
+    headers: [
+      'Name',
+      'Mobile',
+      'Email',
+      'District',
+      'Address',
+      'College / Institution / Common',
+      'Course / Class',
+      'Why join',
+      'Payment',
+      'Order ID',
+      'Receipt No.',
+      'Payment Ref',
+    ],
     statuses: ['New', 'Contacted', 'Approved', 'Rejected'],
+    takesFee: true,
   },
 }
 
+// Membership fee, collected through Cashfree. Payment is off until CASHFREE_APP_ID and CASHFREE_SECRET are set
+// in Project Settings → Script properties; CASHFREE_MODE is 'sandbox' (default) or 'production'.
+// The amount is fixed here, so nobody can change it from the browser.
+const MEMBERSHIP_FEE = 21
+// Printed on the receipt; change together with MEMBERSHIP_FEE
+const MEMBERSHIP_FEE_WORDS = 'Twenty-one rupees only'
+const CASHFREE_API_VERSION = '2026-01-01'
+const CASHFREE_HOSTS = { sandbox: 'https://sandbox.cashfree.com', production: 'https://api.cashfree.com' }
+// Unpaid orders close after this long; the visitor then has to fill the form again
+const ORDER_HOURS = 24
+const PAYMENT = { pending: 'Pending', paid: 'Paid', expired: 'Expired' }
+
 // An email goes here for every new submission. Set to '' to turn notifications off.
 const NOTIFY_EMAIL = 'adivasichhatrasanghjh@gmail.com'
+
+// Shown at the top of the fee receipt emailed to members after they pay
+const RECEIPT_ORG = {
+  name: 'Adivasi Chhatra Sangh, Jharkhand',
+  regNo: '24/2015-16',
+  address: 'Karamtoli, Ranchi, Jharkhand – 834001',
+  phone: '+91 94315 20796',
+  email: 'adivasichhatrasanghjh@gmail.com',
+}
 
 const STATUS_HEADER = 'Status'
 const SESSION_HOURS = 8
@@ -36,6 +84,7 @@ const MAX_PHOTO_BYTES = 3 * 1024 * 1024
 function doPost(e) {
   const params = e.parameter
   if (ADMIN_ACTIONS.indexOf(params.action) >= 0) return reply(handleAdmin(params))
+  if (params.action === 'checkPayment') return reply(checkPayment(params.orderId))
 
   const form = getForm(params.form)
   if (!form) return reply({ ok: false, error: 'Unknown form' })
@@ -43,8 +92,25 @@ function doPost(e) {
   // Hidden "website" field is invisible to people; bots that fill it are dropped silently
   if (params.website) return reply({ ok: true })
 
-  // Photo links are always produced here, never taken from the request
-  const input = Object.assign({}, params, { photos: form.acceptsPhotos ? savePhotos(params) : '' })
+  // The fee order is created before the row is saved, so if Cashfree fails nothing is stored and the visitor can retry
+  let order = null
+  if (form.takesFee && cashfreeConfig()) {
+    try {
+      order = createOrder(params)
+    } catch (err) {
+      console.error(err)
+      return reply({ ok: false, error: err.message === 'invalid_phone' ? 'invalid_phone' : 'payment_unavailable' })
+    }
+  }
+
+  // Photo links and payment details are always produced here, never taken from the request
+  const input = Object.assign({}, params, {
+    photos: form.acceptsPhotos ? savePhotos(params) : '',
+    payment: order ? PAYMENT.pending : '',
+    orderId: order ? order.orderId : '',
+    receiptNo: '',
+    paymentRef: '',
+  })
   const values = form.fields.map((field) => clean(input[field]))
   const lock = LockService.getScriptLock()
   lock.waitLock(10000)
@@ -61,23 +127,342 @@ function doPost(e) {
     lock.releaseLock()
   }
 
-  // The row is already saved, so a failed email (e.g. daily quota reached) must not report failure,
-  // otherwise the visitor retries and the submission is stored twice
-  if (NOTIFY_EMAIL) {
-    try {
-      const lines = form.headers.map((header, i) => `${header}: ${values[i]}`)
-      MailApp.sendEmail(NOTIFY_EMAIL, `New website ${form.tab} submission: ${values[0]}`, lines.join('\n'))
-    } catch (err) {
-      console.error(err)
-    }
-  }
-
+  // Applications that owe the fee are emailed once paid (see settleOrder)
+  if (order) return reply({ ok: true, payment: { orderId: order.orderId, sessionId: order.sessionId, mode: order.mode } })
+  notify(form, values)
   return reply({ ok: true })
+}
+
+// The row is already saved when this runs, so a failed email (e.g. daily quota reached) must not report failure,
+// otherwise the visitor retries and the submission is stored twice
+function notify(form, values) {
+  if (!NOTIFY_EMAIL) return
+  try {
+    const lines = form.headers.map((header, i) => `${header}: ${values[i]}`)
+    MailApp.sendEmail(NOTIFY_EMAIL, `New website ${form.tab} submission: ${values[0]}`, lines.join('\n'))
+  } catch (err) {
+    console.error(err)
+  }
 }
 
 // Opening the web app URL in a browser just confirms it is running
 function doGet() {
   return reply({ ok: true, service: 'Adivasi Chhatra Sangh website forms' })
+}
+
+// ---------- Membership fee (Cashfree) ----------
+
+function cashfreeConfig() {
+  const props = PropertiesService.getScriptProperties()
+  const appId = props.getProperty('CASHFREE_APP_ID')
+  const secret = props.getProperty('CASHFREE_SECRET')
+  if (!appId || !secret) return null
+  return { appId, secret, mode: props.getProperty('CASHFREE_MODE') === 'production' ? 'production' : 'sandbox' }
+}
+
+function cashfree(method, path, body) {
+  const config = cashfreeConfig()
+  const options = {
+    method,
+    muteHttpExceptions: true,
+    headers: { 'x-client-id': config.appId, 'x-client-secret': config.secret, 'x-api-version': CASHFREE_API_VERSION },
+  }
+  if (body) {
+    options.contentType = 'application/json'
+    options.payload = JSON.stringify(body)
+  }
+  const res = UrlFetchApp.fetch(`${CASHFREE_HOSTS[config.mode]}/pg${path}`, options)
+  if (res.getResponseCode() !== 200) throw new Error(`Cashfree ${res.getResponseCode()}: ${res.getContentText()}`)
+  return JSON.parse(res.getContentText())
+}
+
+// Returns the order id plus the session id the website hands to Cashfree's payment popup
+function createOrder(params) {
+  // Cashfree needs a 10 digit mobile; accept +91 / spaces typed in front of it
+  const phone = String(params.phone || '').replace(/\D/g, '').replace(/^(91|0)(?=\d{10}$)/, '')
+  if (!/^\d{10}$/.test(phone)) throw new Error('invalid_phone')
+
+  const orderId = `ACS-${Utilities.getUuid()}`
+  const expires = new Date(Date.now() + ORDER_HOURS * 60 * 60 * 1000)
+  const customer = { customer_id: `M${phone}`, customer_phone: phone }
+  const name = String(params.name || '').trim()
+  if (name.length >= 3) customer.customer_name = name.slice(0, 100)
+  const email = String(params.email || '').trim()
+  if (validEmail(email) && email.length <= 100) customer.customer_email = email
+
+  const body = {
+    order_id: orderId,
+    order_amount: MEMBERSHIP_FEE,
+    order_currency: 'INR',
+    customer_details: customer,
+    order_note: 'Membership fee',
+    order_expiry_time: Utilities.formatDate(expires, 'Asia/Kolkata', "yyyy-MM-dd'T'HH:mm:ssXXX"),
+  }
+  // Where Cashfree sends people back when it can't use the popup (some in-app browsers)
+  const returnUrl = String(params.returnUrl || '')
+  if (/^https:\/\/[^\s?#]+$/.test(returnUrl)) body.order_meta = { return_url: `${returnUrl}?order_id=${orderId}` }
+
+  const order = cashfree('post', '/orders', body)
+  return { orderId, sessionId: order.payment_session_id, mode: cashfreeConfig().mode }
+}
+
+// Called by the website after the payment popup closes, and when Cashfree sends someone back to /join
+function checkPayment(orderId) {
+  if (!/^ACS-[0-9a-f-]{36}$/.test(String(orderId || ''))) return { ok: false, error: 'invalid_order' }
+  if (!cashfreeConfig()) return { ok: false, error: 'payment_unavailable' }
+  try {
+    return Object.assign({ ok: true }, settleOrder(orderId))
+  } catch (err) {
+    console.error(err)
+    return { ok: false, error: 'server_error' }
+  }
+}
+
+// Asks Cashfree for the order's status and records it in the Payment column.
+// When the row first turns Paid it gets a receipt number, and the notification and receipt emails go out once.
+function settleOrder(orderId) {
+  const order = cashfree('get', `/orders/${orderId}`)
+  const paid = order.order_status === 'PAID'
+  const expired = order.order_status === 'EXPIRED' || order.order_status === 'TERMINATED'
+  // Payment details for the receipt; if Cashfree can't give them now, the row is still marked Paid
+  let payment = null
+  if (paid) {
+    try {
+      payment = successfulPayment(orderId)
+    } catch (err) {
+      console.error(err)
+    }
+  }
+  const form = FORMS.join
+  const index = (field) => form.fields.indexOf(field)
+  let values = null
+  let justPaid = false
+
+  const lock = LockService.getScriptLock()
+  lock.waitLock(10000)
+  try {
+    const sheet = getSheet(form, false)
+    const row = sheet ? findOrderRow(sheet, orderId) : 0
+    if (row) {
+      values = rowValues(sheet, form, row)
+      const next = paid ? PAYMENT.paid : expired ? PAYMENT.expired : values[index('payment')]
+      if (next !== values[index('payment')]) {
+        const updates = { payment: next }
+        if (paid) {
+          updates.receiptNo = nextReceiptNo()
+          updates.paymentRef = payment ? paymentRef(payment) : ''
+        }
+        Object.keys(updates).forEach((field) => {
+          sheet.getRange(row, columnFor(sheet, form.headers[index(field)])).setValue(updates[field])
+          values[index(field)] = updates[field]
+        })
+        justPaid = paid
+      }
+    }
+  } finally {
+    lock.releaseLock()
+  }
+  if (justPaid) {
+    notify(form, values)
+    // A failed receipt (no email given, quota reached) must not undo the payment; resend it from the Sheet menu
+    try {
+      sendReceipt(values, payment)
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  const field = (name) => (values ? values[index(name)] : '')
+  return {
+    paid,
+    expired,
+    name: field('name'),
+    district: field('district'),
+    // Lets the website reopen the popup for an order that is still open
+    sessionId: paid || expired ? '' : order.payment_session_id,
+    mode: cashfreeConfig().mode,
+  }
+}
+
+// Runs every 15 minutes once installPaymentCheck has been run. Catches payments whose browser closed before
+// the website could confirm them, and marks orders Expired once Cashfree closes them.
+function checkPendingPayments() {
+  if (!cashfreeConfig()) return
+  const form = FORMS.join
+  const sheet = getSheet(form, false)
+  if (!sheet || sheet.getLastRow() < 2) return
+  const paymentCol = columnFor(sheet, 'Payment')
+  const orderCol = columnFor(sheet, 'Order ID')
+  const data = sheet.getRange(2, 1, sheet.getLastRow() - 1, sheet.getLastColumn()).getValues()
+  data.forEach((cells) => {
+    if (cells[paymentCol - 1] !== PAYMENT.pending || !cells[orderCol - 1]) return
+    try {
+      settleOrder(String(cells[orderCol - 1]))
+    } catch (err) {
+      console.error(err)
+    }
+  })
+}
+
+// Run once from the Apps Script editor after adding the Cashfree keys: grants the permission to call Cashfree
+// and schedules checkPendingPayments. Running it again replaces the schedule rather than adding a second one.
+function installPaymentCheck() {
+  ScriptApp.getProjectTriggers()
+    .filter((trigger) => trigger.getHandlerFunction() === 'checkPendingPayments')
+    .forEach((trigger) => ScriptApp.deleteTrigger(trigger))
+  ScriptApp.newTrigger('checkPendingPayments').timeBased().everyMinutes(15).create()
+  checkPendingPayments()
+}
+
+// ---------- Fee receipt ----------
+
+const PAYMENT_MODES = {
+  upi: 'UPI',
+  credit_card: 'Credit card',
+  debit_card: 'Debit card',
+  net_banking: 'Net banking',
+  wallet: 'Wallet',
+  prepaid_card: 'Prepaid card',
+}
+
+// The successful payment of an order, or null
+function successfulPayment(orderId) {
+  const payments = cashfree('get', `/orders/${orderId}/payments`)
+  return payments.find((p) => p.payment_status === 'SUCCESS') || null
+}
+
+function paymentMode(payment) {
+  const group = String(payment.payment_group || '')
+  return PAYMENT_MODES[group] || (group.indexOf('upi') === 0 ? 'UPI' : group.replace(/_/g, ' '))
+}
+
+// One line for the Payment Ref column, enough to find the payment in the Cashfree dashboard or a bank statement
+function paymentRef(payment) {
+  return [paymentMode(payment), payment.bank_reference && `Bank ref ${payment.bank_reference}`, `Cashfree ${payment.cf_payment_id}`]
+    .filter(Boolean)
+    .join(', ')
+}
+
+// Receipt numbers run per financial year (April–March): ACS/2026-27/0001. Call while holding the script lock.
+function nextReceiptNo() {
+  const now = new Date()
+  const year = Number(Utilities.formatDate(now, 'Asia/Kolkata', 'yyyy'))
+  const month = Number(Utilities.formatDate(now, 'Asia/Kolkata', 'M'))
+  const start = month >= 4 ? year : year - 1
+  const fy = `${start}-${String(start + 1).slice(-2)}`
+  const props = PropertiesService.getScriptProperties()
+  const key = `RECEIPT_SEQ_${fy}`
+  const seq = Number(props.getProperty(key) || 0) + 1
+  props.setProperty(key, String(seq))
+  return `ACS/${fy}/${String(seq).padStart(4, '0')}`
+}
+
+// Emails the receipt (in the message and as a PDF) to the member. `values` are in form.headers order.
+// Throws if it can't be sent; skips quietly when the member gave no email address.
+function sendReceipt(values, payment) {
+  const form = FORMS.join
+  const field = (name) => values[form.fields.indexOf(name)]
+  const email = field('email')
+  if (!validEmail(email)) return false
+
+  const paidAt = payment && payment.payment_completion_time ? new Date(payment.payment_completion_time) : new Date()
+  const receipt = {
+    receiptNo: field('receiptNo'),
+    date: Utilities.formatDate(paidAt, 'Asia/Kolkata', 'd MMM yyyy, h:mm a'),
+    name: field('name'),
+    phone: field('phone'),
+    email,
+    district: field('district'),
+    college: field('college'),
+    orderId: field('orderId'),
+    mode: payment ? paymentMode(payment) : '',
+    bankRef: payment ? String(payment.bank_reference || '') : '',
+    cashfreeId: payment ? String(payment.cf_payment_id || '') : '',
+  }
+  const html = receiptHtml(receipt)
+  const pdf = Utilities.newBlob(html, MimeType.HTML, 'receipt.html')
+    .getAs(MimeType.PDF)
+    .setName(`Receipt ${receipt.receiptNo.replace(/\//g, '-')}.pdf`)
+  const intro =
+    `<p style="font-family:Arial,sans-serif;font-size:15px;color:#14281d">Jai Johar ${escapeHtml(receipt.name)},</p>` +
+    `<p style="font-family:Arial,sans-serif;font-size:15px;color:#14281d">Thank you for joining ${escapeHtml(RECEIPT_ORG.name)}. ` +
+    'We have received your membership fee. Your receipt is below and attached as a PDF.</p>'
+
+  MailApp.sendEmail({
+    to: email,
+    subject: `Membership fee receipt ${receipt.receiptNo} – ${RECEIPT_ORG.name}`,
+    body: `Jai Johar ${receipt.name},\n\nWe have received your membership fee of Rs. ${MEMBERSHIP_FEE}. Receipt No. ${receipt.receiptNo}. The receipt is attached as a PDF.\n\n${RECEIPT_ORG.name}\n${RECEIPT_ORG.phone}`,
+    htmlBody: intro + html,
+    attachments: [pdf],
+    name: RECEIPT_ORG.name,
+    replyTo: RECEIPT_ORG.email,
+  })
+  return true
+}
+
+// Inline styles and tables only, so it looks the same in Gmail, other mail apps and the PDF.
+// "Rs." rather than the rupee sign, which the PDF converter's fonts may not have.
+function receiptHtml(r) {
+  const line = (label, value) =>
+    value
+      ? `<tr><td style="padding:5px 0;color:#5b6b60;width:42%;vertical-align:top">${label}</td>` +
+        `<td style="padding:5px 0;color:#14281d;font-weight:bold">${escapeHtml(value)}</td></tr>`
+      : ''
+  const table = (rows) => `<table style="width:100%;border-collapse:collapse;font-size:14px">${rows}</table>`
+  const heading = (text) =>
+    `<div style="margin:20px 0 6px;font-size:12px;font-weight:bold;letter-spacing:1px;color:#8a5a2b;text-transform:uppercase">${text}</div>`
+  const amount = `Rs. ${MEMBERSHIP_FEE.toFixed(2)}`
+
+  return `<div style="font-family:Arial,sans-serif;max-width:600px;margin:16px auto;border:1px solid #cfe0d4;border-radius:8px;overflow:hidden">
+  <div style="background:#1f5136;color:#ffffff;padding:20px 24px">
+    <div style="font-size:20px;font-weight:bold">${escapeHtml(RECEIPT_ORG.name)}</div>
+    <div style="font-size:12px;margin-top:4px;color:#d7e8dc">Reg. No. ${escapeHtml(RECEIPT_ORG.regNo)} &nbsp;|&nbsp; ${escapeHtml(RECEIPT_ORG.address)}</div>
+    <div style="font-size:12px;color:#d7e8dc">${escapeHtml(RECEIPT_ORG.phone)} &nbsp;|&nbsp; ${escapeHtml(RECEIPT_ORG.email)}</div>
+  </div>
+  <div style="padding:20px 24px">
+    <div style="font-size:18px;font-weight:bold;color:#1f5136">Membership Fee Receipt</div>
+    ${table(line('Receipt No.', r.receiptNo) + line('Date', r.date))}
+    ${heading('Received from')}
+    ${table(line('Name', r.name) + line('Mobile', r.phone) + line('Email', r.email) + line('District', r.district) + line('College / Institution', r.college))}
+    ${heading('Details')}
+    <table style="width:100%;border-collapse:collapse;font-size:14px">
+      <tr style="background:#eef5f0"><td style="padding:8px">Description</td><td style="padding:8px;text-align:right">Amount</td></tr>
+      <tr><td style="padding:8px;border-bottom:1px solid #e3ece6">Membership fee (one-time)</td><td style="padding:8px;text-align:right;border-bottom:1px solid #e3ece6">${amount}</td></tr>
+      <tr><td style="padding:8px;font-weight:bold">Total paid</td><td style="padding:8px;text-align:right;font-weight:bold">${amount}</td></tr>
+    </table>
+    <div style="font-size:13px;color:#5b6b60;margin-top:4px">Amount in words: ${MEMBERSHIP_FEE_WORDS}</div>
+    ${heading('Payment')}
+    ${table(line('Paid by', r.mode) + line('Bank reference (UTR)', r.bankRef) + line('Cashfree payment ID', r.cashfreeId) + line('Order ID', r.orderId))}
+    <p style="font-size:12px;color:#5b6b60;margin-top:20px;line-height:1.5">The membership fee is non-refundable, as set out in the Refund &amp; Cancellation Policy on our website. This is a computer-generated receipt and does not need a signature.</p>
+  </div>
+</div>`
+}
+
+// Run from the Apps Script editor to see the receipt: emails a sample to NOTIFY_EMAIL (uses no receipt number)
+function previewReceipt() {
+  const sample = {
+    name: 'Sample Member',
+    phone: '9999999999',
+    email: NOTIFY_EMAIL,
+    district: 'Ranchi',
+    college: 'Ranchi University',
+    orderId: 'ACS-sample-order',
+    receiptNo: 'ACS/SAMPLE/0000',
+  }
+  const payment = {
+    payment_group: 'upi',
+    bank_reference: '123456789012',
+    cf_payment_id: '5114910000000',
+    payment_completion_time: new Date().toISOString(),
+  }
+  sendReceipt(FORMS.join.fields.map((field) => sample[field] || ''), payment)
+}
+
+// Run from the Apps Script editor to check the Cashfree keys: creates an order (not saved to the sheet)
+// and prints it, or shows Cashfree's error message in the execution log
+function testCashfree() {
+  if (!cashfreeConfig()) throw new Error('CASHFREE_APP_ID / CASHFREE_SECRET are not set in Script properties')
+  console.log(createOrder({ name: 'Test order', phone: '9999999999' }))
 }
 
 // ---------- Admin ----------
@@ -182,7 +567,36 @@ function updateStatus(params) {
 // ---------- Admin password (set from the Sheet menu, never stored in code) ----------
 
 function onOpen() {
-  SpreadsheetApp.getUi().createMenu('ACS Admin').addItem('Set admin password', 'setAdminPassword').addToUi()
+  SpreadsheetApp.getUi()
+    .createMenu('ACS Admin')
+    .addItem('Set admin password', 'setAdminPassword')
+    .addItem('Resend fee receipt for selected row', 'resendReceipt')
+    .addToUi()
+}
+
+// For a member who didn't get the receipt (no email given at the time, typo, mail quota reached):
+// fix the Email cell if needed, click any cell in their row, then use this menu item
+function resendReceipt() {
+  const ui = SpreadsheetApp.getUi()
+  const form = FORMS.join
+  const sheet = SpreadsheetApp.getActiveSheet()
+  const row = sheet.getActiveRange().getRow()
+  if (sheet.getName() !== form.tab || row < 2) {
+    ui.alert(`Click a member's row in the ${form.tab} tab first.`)
+    return
+  }
+  const values = rowValues(sheet, form, row)
+  const field = (name) => values[form.fields.indexOf(name)]
+  if (field('payment') !== PAYMENT.paid || !field('receiptNo')) {
+    ui.alert('This row has no paid membership fee, so there is no receipt to send.')
+    return
+  }
+  if (!validEmail(field('email'))) {
+    ui.alert('This row has no valid email address. Type it in the Email column, then try again.')
+    return
+  }
+  sendReceipt(values, cashfreeConfig() ? successfulPayment(field('orderId')) : null)
+  ui.alert(`Receipt ${field('receiptNo')} sent to ${field('email')}.`)
 }
 
 function setAdminPassword() {
@@ -292,6 +706,25 @@ function statusColumn(sheet) {
   return columnFor(sheet, STATUS_HEADER)
 }
 
+// Sheet row number holding this order id, or 0
+function findOrderRow(sheet, orderId) {
+  if (sheet.getLastRow() < 2) return 0
+  const ids = sheet.getRange(2, columnFor(sheet, 'Order ID'), sheet.getLastRow() - 1, 1).getValues()
+  const index = ids.findIndex(([id]) => id === orderId)
+  return index < 0 ? 0 : index + 2
+}
+
+// A row's values in the order of form.headers; a column the tab doesn't have reads as empty
+function rowValues(sheet, form, row) {
+  const width = sheet.getLastColumn()
+  const sheetHeaders = sheet.getRange(1, 1, 1, width).getValues()[0].map((h) => String(h).trim())
+  const cells = sheet.getRange(row, 1, 1, width).getValues()[0]
+  return form.headers.map((header) => {
+    const index = sheetHeaders.indexOf(header)
+    return index >= 0 ? cellText(cells[index]) : ''
+  })
+}
+
 function cellText(value) {
   if (value instanceof Date) return value.toISOString()
   return value === null || value === undefined ? '' : String(value)
@@ -335,6 +768,14 @@ function safeEqual(a, b) {
   let diff = 0
   for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i)
   return diff === 0
+}
+
+function validEmail(value) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || '').trim())
+}
+
+function escapeHtml(value) {
+  return String(value || '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c])
 }
 
 // Caps length, and stops text starting with = + - @ from being run as a spreadsheet formula

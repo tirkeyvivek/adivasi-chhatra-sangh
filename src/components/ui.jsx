@@ -45,6 +45,7 @@ export function Button({ to, href, variant = 'primary', children, className = ''
     primary: 'bg-sun-400 text-forest-950 hover:bg-sun-300 shadow-lg shadow-sun-500/20',
     green: 'bg-forest-700 text-white hover:bg-forest-800',
     outline: 'border-2 border-white/70 text-white hover:bg-white/10',
+    greenOutline: 'border-2 border-forest-700 text-forest-800 hover:bg-forest-50',
   }
   const cls = `inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-6 py-3 text-center font-bold transition ${styles[variant]} ${className}`
   if (to) return <Link to={to} className={cls} {...props}>{children}</Link>

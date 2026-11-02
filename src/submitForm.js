@@ -3,6 +3,7 @@ import { formsEndpoint } from './data/content'
 // Sends a form to the Google Apps Script web app, which stores it in the Google Sheet.
 // `form` is 'contact' or 'join' and picks the sheet tab (see google-apps-script/Code.gs).
 // `extra` adds fields that aren't form inputs, e.g. photo1..photo3.
+// Resolves to the server's reply; for the Join form it carries `payment` when the fee is switched on.
 export async function submitForm(form, formElement, extra = {}) {
   if (!formsEndpoint) throw new Error('Form endpoint is not configured')
   const body = new URLSearchParams(new FormData(formElement))
@@ -11,6 +12,7 @@ export async function submitForm(form, formElement, extra = {}) {
   const res = await fetch(formsEndpoint, { method: 'POST', body })
   const data = await res.json()
   if (!data.ok) throw new Error(data.error || 'Submission failed')
+  return data
 }
 
 const PHOTO_MAX_SIDE = 1600
