@@ -9,6 +9,8 @@ import News from './pages/News'
 import Join from './pages/Join'
 import Contact from './pages/Contact'
 import NotFound from './pages/NotFound'
+import Policy from './pages/Policy'
+import { terms, privacy, refund } from './data/policies'
 
 // Admin is loaded on demand so it adds nothing to the public pages' bundle
 const Admin = lazy(() => import('./pages/Admin'))
@@ -53,6 +55,9 @@ export default function App() {
           <Route path="/news" element={<News />} />
           <Route path="/join" element={<Join />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/terms" element={<Policy policy={terms} />} />
+          <Route path="/privacy" element={<Policy policy={privacy} />} />
+          <Route path="/refund-policy" element={<Policy policy={refund} />} />
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>

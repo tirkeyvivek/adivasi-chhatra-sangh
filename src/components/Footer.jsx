@@ -1,6 +1,7 @@
 import { Link } from 'react-router'
 import { Mail, MapPin, Phone } from 'lucide-react'
 import { navLinks, org } from '../data/content'
+import { policyLinks } from '../data/policies'
 import { Logo } from './ui'
 import SocialLinks from './SocialLinks'
 
@@ -68,6 +69,13 @@ export default function Footer() {
         </div>
       </div>
       <div className="border-t border-white/10 px-4 py-5 text-center text-sm text-forest-400">
+        <nav aria-label="Policies" className="mb-3 flex flex-wrap justify-center gap-x-5 gap-y-1">
+          {policyLinks.map((l) => (
+            <Link key={l.to} to={l.to} className="py-1 text-forest-200 transition hover:text-white">
+              {l.label}
+            </Link>
+          ))}
+        </nav>
         © {new Date().getFullYear()} {org.nameEn}, {org.stateEn}. Jai Johar! जय जोहार!
       </div>
     </footer>
